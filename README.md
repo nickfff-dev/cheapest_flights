@@ -238,7 +238,7 @@ If `get_freebase_id` returns "City not found", try the full official name (e.g. 
 
 **No flights found** — The Bright Data zone is returning HTML before Google's JS has finished loading flight data. Enable JS rendering in your zone configuration, or increase `--time-windows` to reduce results per request.
 
-**`City not found in Wikidata`** — Check spelling. Use `.title()` casing (e.g. `New York`, not `new york`). Try the full official name.
+**`City not found in Wikidata`** — Check spelling. Use `.title()` casing (e.g. `New York`, not `new york`). Try the full official name. e.g `New York City`
 
 **`--time-windows N` rejected** — N must divide 24 evenly. Valid values: `1 2 3 4 6 8 12 24`.
 
