@@ -54,7 +54,7 @@ import requests
 from selectolax.lexbor import LexborHTMLParser
 
 # ── Bright Data configuration ─────────────────────────────────────────────────
-BRIGHTDATA_API_KEY  = os.environ.get("BRIGHTDATA_API_KEY", "your_key_here")
+BRIGHTDATA_API_KEY  = os.environ.get("BRIGHTDATA_API_KEY", "")
 BRIGHTDATA_ENDPOINT = "https://api.brightdata.com/request"
 BRIGHTDATA_ZONE     = "serp_api1"
 
