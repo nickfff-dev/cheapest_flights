@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-google_flights_cheapest.py
+cheapest_flights.py
 ══════════════════════════════════════════════════════════════════════════════
 Fetch the Google Flights Cheapest tab via Bright Data SERP API.
 City KG MIDs are resolved live from Wikidata. Airport codes need no lookup.
@@ -10,26 +10,26 @@ Usage
     pip install requests selectolax
 
     # Both cities
-    python google_flights_cheapest.py London Milan 2026-04-15
+    python cheapest_flights.py London Milan 2026-04-15
 
     # Round-trip
-    python google_flights_cheapest.py London Milan 2026-04-15 2026-04-22
+    python cheapest_flights.py London Milan 2026-04-15 2026-04-22
 
     # City + airport code
-    python google_flights_cheapest.py London 2026-04-15 --to-airport MXP
+    python cheapest_flights.py London 2026-04-15 --to-airport MXP
 
     # Airport + city
-    python google_flights_cheapest.py Milan 2026-04-15 --from-airport LHR
+    python cheapest_flights.py Milan 2026-04-15 --from-airport LHR
 
     # Both airports (no city args needed)
-    python google_flights_cheapest.py 2026-04-15 --from-airport LHR --to-airport MXP
+    python cheapest_flights.py 2026-04-15 --from-airport LHR --to-airport MXP
 
     # With filters
-    python google_flights_cheapest.py London Milan 2026-04-15 2026-04-19 \\
+    python cheapest_flights.py London Milan 2026-04-15 2026-04-19 \\
         --adults 2 --cabin business --sort best
 
     # Decode a tfs= blob to reveal city KG MIDs
-    python google_flights_cheapest.py --decode <tfs_value>
+    python cheapest_flights.py --decode <tfs_value>
 
 ══════════════════════════════════════════════════════════════════════════════
 """
