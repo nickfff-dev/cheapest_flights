@@ -1,6 +1,6 @@
 # google_flights_cheapest
 
-Scrapes Google Flights and returns the **Cheapest** (or Best) tab results for any route. City KG MIDs are resolved live from Wikidata — no static airport/city lookup table.
+Searches Google Flights and returns the **Cheapest** (or Best) tab results for any route. City KG MIDs are resolved live from Wikidata — no static airport/city lookup table.
 
 <img width="1910" height="1520" alt="screencapture-127-0-0-1-8001-2026-04-14-06_38_14" src="https://github.com/user-attachments/assets/285e1f21-cda0-43a2-abd3-e81a7660c4ce" />
 ---
