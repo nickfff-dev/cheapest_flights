@@ -5,12 +5,16 @@ Run: uvicorn skyprowl_server:app --host 0.0.0.0 --port 8001
 """
 from __future__ import annotations
 
+import csv
+import io
 import os
 import sys
-from typing import Optional
+import uuid
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, field_validator
 
@@ -33,6 +37,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── In-memory results cache (keyed by UUID, for CSV download) ─────────────────
+_results_cache: Dict[str, dict] = {}
+
 
 # ── Validation ────────────────────────────────────────────────────────────────
 
@@ -135,11 +143,64 @@ def search_flights(req: SearchRequest):
     ]
     records.sort(key=_price_sort_key)
 
-    return {
-        "flights":  records,
-        "count":    len(records),
-        "query_url": url,
+    # Cache for CSV download
+    key = str(uuid.uuid4())
+    _results_cache[key] = {
+        "records":    records,
+        "origin":     req.origin_id,
+        "dest":       req.dest_id,
+        "dep_date":   req.dep_date,
+        "ret_date":   req.ret_date,
     }
+
+    return {
+        "flights":      records,
+        "count":        len(records),
+        "download_key": key,
+    }
+
+
+# ── CSV download ──────────────────────────────────────────────────────────────
+
+@app.get("/api/download/{key}")
+def download_csv(key: str):
+    cached = _results_cache.get(key)
+    if not cached:
+        raise HTTPException(status_code=404, detail="Results not found or expired.")
+
+    records  = cached["records"]
+    origin   = cached["origin"].replace("/m/", "").replace(" ", "_")
+    dest     = cached["dest"].replace("/m/", "").replace(" ", "_")
+    dep_date = cached["dep_date"]
+    filename = f"skyprowl_{origin}_{dest}_{dep_date}.csv"
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "Airline", "Price", "Origin", "Destination",
+        "Depart", "Arrive", "Duration", "Stops",
+        "CO2_kg", "CO2_pct", "CarryOn_Excluded", "Layovers",
+    ])
+    for r in records:
+        layovers = "; ".join(
+            f"{ls.get('airport_name') or ls.get('city', '')} ({ls.get('duration', '')})"
+            for ls in (r.get("layover_stops") or [])
+        )
+        writer.writerow([
+            r["airline"], r["price"], r["origin"], r["destination"],
+            r["departure_time"], r["arrival_time"], r["duration"], r["stops"],
+            r["co2_kg"], r["co2_percent_diff"],
+            "Yes" if r["carry_on_excluded"] else "No",
+            layovers,
+        ])
+
+    csv_bytes = buf.getvalue().encode("utf-8-sig")  # BOM for Excel compatibility
+
+    return StreamingResponse(
+        iter([csv_bytes]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ── Static frontend ───────────────────────────────────────────────────────────

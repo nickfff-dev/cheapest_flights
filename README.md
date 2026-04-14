@@ -1,63 +1,66 @@
-# google_flights_cheapest.py
+# google_flights_cheapest
 
-Scrapes Google Flights and returns the **Cheapest** (or Best) tab results for any route, via the [Bright Data SERP API](https://brightdata.com/). City KG MIDs are resolved live from Wikidata — no static airport/city lookup table.
+Scrapes Google Flights and returns the **Cheapest** (or Best) tab results for any route. City KG MIDs are resolved live from Wikidata — no static airport/city lookup table.
 
 ---
 
 ## Requirements
 
 ```bash
-pip install requests selectolax
+pip install requests selectolax fastapi uvicorn
 ```
 
 | Dependency | Purpose |
 |---|---|
-| `requests` | HTTP calls to Bright Data and Wikidata SPARQL |
-| `selectolax` | Fast HTML parsing with CSS selectors (Lexbor backend) |
+| `requests` | HTTP calls to Wikidata SPARQL |
+| `selectolax` | Fast HTML parsing (Lexbor backend) |
+| `fastapi` + `uvicorn` | Web UIs (optional) |
 
 ---
 
-## Configuration
+## Project structure
 
-Set your Bright Data API key as an environment variable before running:
-
-```bash
-# Linux / macOS
-export BRIGHTDATA_API_KEY="your_key_here"
-
-# Windows (PowerShell)
-$env:BRIGHTDATA_API_KEY="your_key_here"
+```
+.
+├── google_flights_cheapest/
+│   └── google_flights_cheapest.py   # Core library (URL builder, parser)
+├── scraper/
+│   └── scraper.py                   # HTTP fetch layer
+├── main.py                          # CLI entry point
+├── server.py                        # European Flight Scanner web UI
+└── skyprowl/
+    ├── skyprowl_server.py           # SkyProwl single-route web UI
+    └── static/
+        └── index.html
 ```
 
-The zone is hardcoded to `serp_api1`. Change `BRIGHTDATA_ZONE` at the top of the script if yours differs.
-
 ---
 
-## Usage
+## CLI — `main.py`
 
 ### Basic — both cities
 
 ```bash
-python google_flights_cheapest.py London Milan 2026-04-15
+python main.py London Milan 2026-04-15
 ```
 
 ### Round-trip — add a return date
 
 ```bash
-python google_flights_cheapest.py London Milan 2026-04-15 2026-04-22
+python main.py London Milan 2026-04-15 2026-04-22
 ```
 
 ### Mix city and airport code
 
 ```bash
 # City → airport
-python google_flights_cheapest.py London 2026-04-15 --to-airport MXP
+python main.py London 2026-04-15 --to-airport MXP
 
 # Airport → city
-python google_flights_cheapest.py Milan 2026-04-15 --from-airport LHR
+python main.py Milan 2026-04-15 --from-airport LHR
 
 # Both airports — no city tokens needed
-python google_flights_cheapest.py 2026-04-15 --from-airport LHR --to-airport MXP
+python main.py 2026-04-15 --from-airport LHR --to-airport MXP
 ```
 
 > Airport codes are passed via flags, never as positional arguments. This avoids ambiguity with 3-letter city abbreviations.
@@ -65,22 +68,21 @@ python google_flights_cheapest.py 2026-04-15 --from-airport LHR --to-airport MXP
 ### All filters
 
 ```bash
-python google_flights_cheapest.py London Milan 2026-04-15 2026-04-22 \
+python main.py London Milan 2026-04-15 2026-04-22 \
   --adults 2 \
   --cabin business \
-  --sort best \
-  --time-windows 4
+  --sort best
 ```
 
 ### Decode a `tfs=` blob (find KG MIDs for unknown cities)
 
 ```bash
-python google_flights_cheapest.py --decode CBwQAhonEgoy...
+python main.py --decode CBwQAhonEgoy...
 ```
 
 ---
 
-## All flags
+## CLI flags
 
 | Flag | Default | Description |
 |---|---|---|
@@ -88,10 +90,53 @@ python google_flights_cheapest.py --decode CBwQAhonEgoy...
 | `--to-airport IATA` | — | Destination airport code, e.g. `MXP`. Replaces dest city. |
 | `--adults N` | `1` | Number of adult passengers. |
 | `--cabin` | `economy` | `economy` · `premium_economy` · `business` · `first` |
-| `--sort` | `cheapest` | `cheapest` or `best` (Google's sort tabs). |
-| `--time-windows N` | `6` | Split the day into N departure-hour windows, fetch each separately, then merge and deduplicate. Must divide 24 evenly: `1 2 3 4 6 8 12 24`. Use `1` to disable splitting. |
-| `--dump-cards N` | `0` | Save first N raw card HTMLs to `card_1.html`, `card_2.html` … for debugging selector failures. |
+| `--sort` | `cheapest` | `cheapest` or `best` |
 | `--decode TFS` | — | Decode a `tfs=` URL blob and print embedded city KG MIDs and dates, then exit. |
+
+---
+
+## Web UIs
+
+### SkyProwl — single route search
+
+A single-route search interface with a results table, filters, sortable columns, layover details, and CSV export.
+
+```bash
+cd skyprowl
+uvicorn skyprowl_server:app --host 0.0.0.0 --port 8001
+```
+
+Open `http://localhost:8001`. Enter origin and destination (city name or IATA code), departure date, and optional return date. Fields validate on blur — city names are resolved against Wikidata, airport codes are accepted as-is.
+
+**API endpoints:**
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/validate-location?q=` | Resolve city name or IATA code |
+| `POST` | `/api/search` | Run a search, returns flights + `download_key` |
+| `GET` | `/api/download/{key}` | Download results as CSV |
+
+### European Flight Scanner — bulk origin scan
+
+Scans from one origin to all (or a selected subset of) European airports in parallel, with live progress tracking, stop/resume, and JSON download.
+
+```bash
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+Open `http://localhost:8000`.
+
+**API endpoints:**
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/validate-origin?q=` | Resolve origin city or IATA code |
+| `GET` | `/api/airports` | Full European airport list |
+| `POST` | `/api/tasks` | Start a scan task |
+| `GET` | `/api/tasks/{id}` | Poll task status and per-airport progress |
+| `POST` | `/api/tasks/{id}/stop` | Pause a running task |
+| `POST` | `/api/tasks/{id}/resume` | Resume a stopped task |
+| `GET` | `/api/tasks/{id}/download` | Download all results as JSON |
 
 ---
 
@@ -105,7 +150,7 @@ Airport codes bypass this step entirely — they are passed directly into the pr
 
 ### 2 — Protobuf URL encoding
 
-Google Flights encodes all search parameters in the `tfs=` query parameter as a base64-encoded protobuf blob. This script encodes that blob from scratch using a minimal hand-rolled encoder — no `google-protobuf` dependency needed.
+Google Flights encodes all search parameters in the `tfs=` query parameter as a base64-encoded protobuf blob. The library encodes that blob from scratch with a minimal hand-rolled encoder — no `google-protobuf` dependency needed.
 
 The encoding has been verified **byte-for-byte** against real Google Flights URLs for:
 
@@ -117,13 +162,12 @@ The encoding has been verified **byte-for-byte** against real Google Flights URL
 | City → airport | ✓ |
 | Airport → city | ✓ |
 | Airport → airport | ✓ |
-| Time-window filter (dep hour range) | ✓ |
 
 The `tfu=` parameter encodes the active tab — `f4=2` selects Cheapest, omitting `f4` selects Best.
 
-### 3 — Bright Data fetch
+### 3 — Fetch layer (`scraper/scraper.py`)
 
-The assembled URL is posted to `https://api.brightdata.com/request` with your zone and API key. Bright Data returns the fully rendered HTML. Each window in time-split mode is a separate request.
+The assembled URL is passed to `fetch_flights()` in the scraper module, which returns the fully rendered HTML. The core library has no direct HTTP dependency — swap the scraper implementation without touching the URL builder or parser.
 
 ### 4 — HTML parsing (selectolax)
 
@@ -141,17 +185,13 @@ All selectors are anchored to `aria-label` and `role` attributes — never class
 | CO2 data | `[data-co2currentflight]` data attributes |
 | Airline name | String split on `"flight with "` from the main summary label |
 
-### 5 — Time-window splitting
-
-Google Flights caps the number of results returned per request. With `--time-windows 4` the day is divided into `[00:00–06:00)`, `[06:00–12:00)`, `[12:00–18:00)`, `[18:00–24:00)` and each window is fetched separately. Results are merged and deduplicated by `(airline, departure_time, origin_code, dest_code)` — first-seen wins, so cheaper flights from earlier windows are preserved.
-
-The time filter is encoded as **segment fields f8/f9** inside the protobuf segment, confirmed from a decoded real URL.
-
 ---
 
 ## Output
 
-Results are written to **`result.json`** in the working directory, sorted by price (cheapest first), and also printed to stdout.
+### CLI
+
+Results are written to **`flights_{origin}_{dest}_{dep}{'_'+ret if ret else ''}.json`** in the working directory, sorted by price (cheapest first), and printed to stdout.
 
 ### JSON structure
 
@@ -164,7 +204,6 @@ Results are written to **`result.json`** in the working directory, sorted by pri
   "adults": 1,
   "cabin": "economy",
   "sort": "cheapest",
-  "time_windows": 6,
   "results": [
     {
       "airline": "Wizz Air",
@@ -213,9 +252,9 @@ Results are written to **`result.json`** in the working directory, sorted by pri
 | `stops` | string | `Nonstop`, `1 stop`, `2 stops` … |
 | `origin` | string | Departure IATA code |
 | `destination` | string | Arrival IATA code |
-| `co2_kg` | string | Estimated CO2 in kilograms for the whole itinerary |
+| `co2_kg` | string | Estimated CO2 in kilograms |
 | `co2_percent_diff` | string | % vs typical flight on this route; negative = greener |
-| `carry_on_excluded` | bool | `true` if the price does not include overhead bin access |
+| `carry_on_excluded` | bool | `true` if overhead bin access is not included in the price |
 | `layover_stops` | array | One object per stop: `airport_code`, `duration`, `airport_name` |
 
 ---
@@ -228,18 +267,16 @@ If `get_freebase_id` returns "City not found", try the full official name (e.g. 
 2. Copy the `tfs=` value from the address bar.
 3. Run:
    ```bash
-   python google_flights_cheapest.py --decode <tfs_value>
+   python main.py --decode <tfs_value>
    ```
-4. The decoded output shows the KG MID. You can then pass it directly to `build_google_url()` if using the script as a library.
+4. The decoded output shows the KG MID. Pass it directly to `build_google_url()` if using the library programmatically.
 
 ---
 
 ## Troubleshooting
 
-**No flights found** — The Bright Data zone is returning HTML before Google's JS has finished loading flight data. Enable JS rendering in your zone configuration, or increase `--time-windows` to reduce results per request.
+**No flights found** — The scraper is returning HTML before the page has fully loaded flight data. Check `scraper/scraper.py` to ensure JS rendering is enabled in your fetch configuration.
 
-**`City not found in Wikidata`** — Check spelling. Use `.title()` casing (e.g. `New York`, not `new york`). Try the full official name. e.g `New York City`
+**`City not found in Wikidata`** — Check spelling. Use title case (e.g. `New York`, not `new york`). Try the full official name, e.g. `New York City`.
 
-**`--time-windows N` rejected** — N must divide 24 evenly. Valid values: `1 2 3 4 6 8 12 24`.
-
-**`--dump-cards N`** — Saves raw card HTML to `card_1.html` … so you can inspect what selectolax is actually receiving from Bright Data when selectors return nothing.
+**`Provide either a destination city or --to-airport, not both`** — Airport codes must be passed via `--from-airport` / `--to-airport`, not as positional arguments.

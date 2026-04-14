@@ -18,6 +18,9 @@ from scraper.scraper import fetch_flights
 
 _SEP = "─" * 66
 
+def result_filename(origin, dest, dep_date, ret_date=None):
+    return f"flights_{origin}_{dest}_{dep_date}{'_'+ret_date if ret_date else ''}.json".replace(' ', '_').lower()
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="main.py",
@@ -213,7 +216,8 @@ def main() -> None:
             "sort":         args.sort,
             "results":      records,
         }
-        with open("result11.json", "w", encoding="utf-8") as f:
+
+        with open(result_filename(origin_name, dest_name, dep_date, ret_date), "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
         print(f"[✓] Results saved → result.json  ({len(records)} flight(s))")
 
