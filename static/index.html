@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SkyProwl — Flight Hunter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset & base ──────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #070b14;
+    --surface:   #0d1424;
+    --surface2:  #111c33;
+    --border:    #1a2847;
+    --cyan:      #00e5ff;
+    --cyan-dim:  #007a8c;
+    --cyan-glow: rgba(0,229,255,0.12);
+    --amber:     #ffb300;
+    --red:       #ff3d57;
+    --green:     #00e676;
+    --text:      #c8d8f0;
+    --text-dim:  #4a6080;
+    --text-bright: #eef4ff;
+    --mono:      'Share Tech Mono', monospace;
+    --display:   'Chakra Petch', sans-serif;
+    --radius:    4px;
+    --transition: 160ms cubic-bezier(.4,0,.2,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--display);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,255,0.06) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,40,71,0.4) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,40,71,0.2) 40px);
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    padding: 28px 24px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.4;
+  }
+  .logo {
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--text-bright);
+    line-height: 1;
+  }
+  .logo span { color: var(--cyan); }
+  .tagline {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .status-bar {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity:.4; }
+  }
+
+  /* ── Main layout ─────────────────────────────────────────────── */
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── Search panel ────────────────────────────────────────────── */
+  .search-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin-bottom: 36px;
+    position: relative;
+  }
+  .search-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 20px; width: 80px; height: 2px;
+    background: var(--cyan);
+    border-radius: 0 0 2px 2px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  /* ── Route row ───────────────────────────────────────────────── */
+  .route-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 20px;
+  }
+  .route-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 10px;
+    color: var(--cyan-dim);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ── Options row ─────────────────────────────────────────────── */
+  .options-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Field ───────────────────────────────────────────────────── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-bright);
+    padding: 10px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    -webkit-appearance: none;
+  }
+  .field-input:focus {
+    border-color: var(--cyan-dim);
+    box-shadow: 0 0 0 3px var(--cyan-glow);
+  }
+  .field-input::placeholder { color: var(--text-dim); font-size: 12px; }
+  .field-input option { background: var(--surface2); }
+
+  /* validation states */
+  .field-input.valid   { border-color: var(--green); }
+  .field-input.invalid { border-color: var(--red); }
+  .field-input.checking { border-color: var(--amber); animation: border-pulse 0.8s ease infinite; }
+  @keyframes border-pulse {
+    0%,100% { border-color: var(--amber); }
+    50% { border-color: transparent; }
+  }
+
+  .field-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    min-height: 14px;
+    transition: color var(--transition);
+  }
+  .field-hint.ok    { color: var(--green); }
+  .field-hint.err   { color: var(--red); }
+  .field-hint.info  { color: var(--amber); }
+
+  /* ── Submit ──────────────────────────────────────────────────── */
+  .submit-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-search {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--cyan);
+    border: none;
+    border-radius: var(--radius);
+    padding: 12px 32px;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-search:hover:not(:disabled) {
+    background: #33ecff;
+    box-shadow: 0 0 24px rgba(0,229,255,0.4);
+    transform: translateY(-1px);
+  }
+  .btn-search:active { transform: translateY(0); }
+  .btn-search:disabled {
+    background: var(--border);
+    color: var(--text-dim);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-search.loading { pointer-events: none; }
+  .btn-search.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    animation: shimmer 1s ease infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .search-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Results section ─────────────────────────────────────────── */
+  #results-section { display: none; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .results-title {
+    font-size: clamp(16px, 4vw, 22px);
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+  .results-title .route-tag {
+    color: var(--cyan);
+    font-size: 0.7em;
+    font-weight: 400;
+    margin-left: 8px;
+    font-family: var(--mono);
+  }
+
+  .btn-export {
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    background: transparent;
+    border: 1px solid var(--cyan-dim);
+    border-radius: var(--radius);
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .btn-export:hover {
+    background: var(--cyan-glow);
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0,229,255,0.2);
+  }
+
+  /* ── Stats strip ─────────────────────────────────────────────── */
+  .stats-strip {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--cyan);
+    font-weight: 400;
+  }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── Filter bar ──────────────────────────────────────────────── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-right: 4px;
+  }
+  .filter-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .filter-chip:hover { border-color: var(--cyan-dim); color: var(--text); }
+  .filter-chip.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-glow); }
+
+  /* ── Table ───────────────────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead {
+    background: var(--surface2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  th {
+    font-family: var(--display);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+    padding: 12px 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--transition);
+    border-bottom: 1px solid var(--border);
+  }
+  th:hover { color: var(--text); }
+  th.sorted { color: var(--cyan); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.5; font-size: 8px; }
+  th.sorted .sort-arrow { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(26,40,71,0.6);
+    transition: background var(--transition);
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(0,229,255,0.03); }
+
+  td {
+    font-family: var(--mono);
+    padding: 11px 14px;
+    color: var(--text);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .td-airline { color: var(--text-bright); font-family: var(--display); font-size: 12px; }
+  .td-price { color: var(--cyan); font-size: 15px; font-weight: 700; }
+  .td-price.expensive { color: var(--text-dim); font-size: 13px; font-weight: 400; }
+  .td-route { font-size: 12px; color: var(--text-dim); }
+  .td-route .arrow { color: var(--cyan-dim); }
+  .td-stops .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .badge-nonstop { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+  .badge-stop    { background: rgba(255,179,0,0.1);  color: var(--amber); border: 1px solid rgba(255,179,0,0.25); }
+  .badge-stops   { background: rgba(255,61,87,0.1);  color: var(--red);   border: 1px solid rgba(255,61,87,0.25); }
+
+  .co2-bar { display: flex; align-items: center; gap: 6px; }
+  .co2-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+  .co2-low  { background: rgba(0,230,118,0.1); color: var(--green); }
+  .co2-mid  { background: rgba(255,179,0,0.1);  color: var(--amber); }
+  .co2-high { background: rgba(255,61,87,0.1);  color: var(--red); }
+
+  .icon-warn { font-size: 10px; opacity: 0.7; }
+
+  /* layover expand */
+  .layover-row td {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 6px 14px 10px 28px;
+    background: rgba(7,11,20,0.5);
+  }
+  .layover-row { display: none; }
+  .layover-row.visible { display: table-row; }
+  .expandable { cursor: pointer; }
+  .expand-icon { color: var(--cyan-dim); font-size: 10px; margin-right: 4px; transition: transform 0.2s; display: inline-block; }
+  .expanded .expand-icon { transform: rotate(90deg); }
+
+  /* ── Loading overlay ─────────────────────────────────────────── */
+  #loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(7,11,20,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  #loading-overlay.visible { display: flex; }
+  .radar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    position: relative;
+    animation: spin 2s linear infinite;
+  }
+  .radar::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--cyan);
+    animation: spin 1.4s linear infinite reverse;
+  }
+  .radar::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--cyan);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+  .loading-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    letter-spacing: 1px;
+  }
+
+  /* ── Error / empty ───────────────────────────────────────────── */
+  .error-box, .empty-box {
+    padding: 28px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .error-box {
+    background: rgba(255,61,87,0.06);
+    border: 1px solid rgba(255,61,87,0.2);
+    color: var(--red);
+  }
+  .empty-box {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+  }
+
+  /* ── Mobile ──────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    header { flex-wrap: wrap; gap: 8px; }
+    .status-bar { margin-left: 0; }
+    .route-row { grid-template-columns: 1fr; gap: 8px; }
+    .route-arrow { display: none; }
+    .options-row { grid-template-columns: 1fr 1fr; }
+    .search-panel { padding: 20px 16px; }
+    main { padding: 20px 12px 60px; }
+    table { font-size: 12px; }
+    td { padding: 9px 10px; }
+    th { padding: 10px 10px; }
+    .td-co2, .th-co2 { display: none; }
+    .stats-strip { gap: 16px; padding: 12px 14px; }
+    .stat-value { font-size: 16px; }
+  }
+  @media (max-width: 400px) {
+    .options-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="radar"></div>
+  <div class="loading-text" id="loading-msg">SCANNING THE SKIES</div>
+  <div class="loading-sub">CHECKING ROUTES</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div>
+    <h1 class="logo">Sky<span>Prowl</span></h1>
+  </div>
+  <div class="tagline">Flight Hunter v1.0</div>
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>READY</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Search panel -->
+  <div class="search-panel">
+    <div class="panel-title">▸ New Search</div>
+
+    <!-- Route row -->
+    <div class="route-row">
+      <div class="field">
+        <label class="field-label" for="origin">
+          Origin
+        </label>
+        <input
+          id="origin"
+          class="field-input"
+          type="text"
+          placeholder="City or IATA code"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="field-hint" id="origin-hint"></div>
+      </div>
+
+      <div class="route-arrow">→</div>
+
+      <div class="field">
+        <label class="field-label" for="dest">
+          Destination
+        </label>
+        <input
+          id="dest"
+          class="field-input"
+          type="text"
+          placeholder="City or IATA code"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="field-hint" id="dest-hint"></div>
+      </div>
+    </div>
+
+    <!-- Options row -->
+    <div class="options-row">
+      <div class="field">
+        <label class="field-label" for="dep-date">Depart</label>
+        <input id="dep-date" class="field-input" type="date"/>
+        <div class="field-hint" id="dep-hint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="ret-date">Return <span style="color:var(--text-dim);font-size:8px">(optional)</span></label>
+        <input id="ret-date" class="field-input" type="date"/>
+        <div class="field-hint" id="ret-hint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="adults">Adults</label>
+        <input id="adults" class="field-input" type="number" min="1" max="9" value="1"/>
+        <div class="field-hint" id="adults-hint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="cabin">Cabin</label>
+        <select id="cabin" class="field-input">
+          <option value="economy">Economy</option>
+          <option value="premium_economy">Premium Economy</option>
+          <option value="business">Business</option>
+          <option value="first">First</option>
+        </select>
+        <div class="field-hint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="sort">Sort</label>
+        <select id="sort" class="field-input">
+          <option value="cheapest">Cheapest</option>
+          <option value="best">Best</option>
+        </select>
+        <div class="field-hint"></div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-row">
+      <button id="btn-search" class="btn-search" disabled>
+        Search Flights
+      </button>
+      <span class="search-meta" id="form-meta"></span>
+    </div>
+  </div>
+
+  <!-- Results section -->
+  <div id="results-section">
+    <div class="results-header">
+      <div class="results-title">
+        Results
+        <span class="route-tag" id="route-label"></span>
+      </div>
+      <button class="btn-export" id="btn-export" onclick="exportCsv()">
+        ↓ Export CSV
+      </button>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip" id="stats-strip"></div>
+
+    <!-- Filter chips -->
+    <div class="filter-bar">
+      <span class="filter-label">Filter:</span>
+      <button class="filter-chip active" data-filter="all" onclick="applyFilter(this)">All</button>
+      <button class="filter-chip" data-filter="nonstop" onclick="applyFilter(this)">Nonstop</button>
+      <button class="filter-chip" data-filter="with-carryOn" onclick="applyFilter(this)">Carry-on incl.</button>
+    </div>
+
+    <!-- Table -->
+    <div id="results-container"></div>
+  </div>
+
+</main>
+
+<script>
+/* ── State ──────────────────────────────────────────────────── */
+const state = {
+  originId:   null,
+  originName: null,
+  destId:     null,
+  destName:   null,
+  flights:    [],
+  sortCol:    'price',
+  sortDir:    1,
+  filter:     'all',
+};
+
+const validated = { origin: false, dest: false };
+
+/* ── DOM refs ─────────────────────────────────────────────── */
+const originInput = document.getElementById('origin');
+const destInput   = document.getElementById('dest');
+const depDate     = document.getElementById('dep-date');
+const retDate     = document.getElementById('ret-date');
+const adultsInput = document.getElementById('adults');
+const cabinSel    = document.getElementById('cabin');
+const sortSel     = document.getElementById('sort');
+const btnSearch   = document.getElementById('btn-search');
+const formMeta    = document.getElementById('form-meta');
+const overlay     = document.getElementById('loading-overlay');
+const loadingMsg  = document.getElementById('loading-msg');
+
+// Set min date to today
+const today = new Date().toISOString().split('T')[0];
+depDate.min = today;
+retDate.min = today;
+depDate.value = today;
+
+/* ── Location validation ──────────────────────────────────── */
+let validateTimers = {};
+
+function setFieldState(id, state, msg) {
+  const input = document.getElementById(id);
+  const hint  = document.getElementById(id + '-hint');
+  input.classList.remove('valid', 'invalid', 'checking');
+  if (state) input.classList.add(state);
+  if (hint) {
+    hint.className = 'field-hint';
+    if (state === 'valid')   hint.classList.add('ok');
+    if (state === 'invalid') hint.classList.add('err');
+    if (state === 'checking') hint.classList.add('info');
+    hint.textContent = msg || '';
+  }
+}
+
+async function validateLocation(fieldId, inputEl, key) {
+  const q = inputEl.value.trim();
+  if (!q) {
+    setFieldState(fieldId, '', '');
+    validated[key] = false;
+    updateSearchBtn();
+    return;
+  }
+
+  setFieldState(fieldId, 'checking', '⟳ validating...');
+  validated[key] = false;
+  updateSearchBtn();
+
+  try {
+    const res = await fetch(`/api/validate-location?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      setFieldState(fieldId, 'invalid', '✗ ' + (data.detail || 'Not found'));
+      validated[key] = false;
+    } else {
+      const label = data.type === 'airport'
+        ? `✓ Airport: ${data.location_name}`
+        : `✓ City: ${data.location_name}`;
+      setFieldState(fieldId, 'valid', label);
+      if (key === 'origin') {
+        state.originId   = data.location_id;
+        state.originName = data.location_name;
+      } else {
+        state.destId   = data.location_id;
+        state.destName = data.location_name;
+      }
+      validated[key] = true;
+    }
+  } catch (e) {
+    setFieldState(fieldId, 'invalid', '✗ Network error');
+    validated[key] = false;
+  }
+  updateSearchBtn();
+}
+
+function onLocationInput(fieldId, key) {
+  clearTimeout(validateTimers[key]);
+  validated[key] = false;
+  updateSearchBtn();
+  const inputEl = document.getElementById(fieldId);
+  validateTimers[key] = setTimeout(() => {
+    validateLocation(fieldId, inputEl, key);
+  }, 600);
+}
+
+
+originInput.addEventListener('blur',  () => {
+  clearTimeout(validateTimers.origin);
+  if (originInput.value.trim()) validateLocation('origin', originInput, 'origin');
+});
+destInput.addEventListener('blur', () => {
+  clearTimeout(validateTimers.dest);
+  if (destInput.value.trim()) validateLocation('dest', destInput, 'dest');
+});
+
+/* ── Date validation ──────────────────────────────────────── */
+depDate.addEventListener('change', () => {
+  const hint = document.getElementById('dep-hint');
+  if (!depDate.value) {
+    hint.className = 'field-hint err'; hint.textContent = '✗ Required'; return;
+  }
+  hint.className = 'field-hint ok'; hint.textContent = '';
+  retDate.min = depDate.value;
+  if (retDate.value && retDate.value < depDate.value) retDate.value = '';
+  updateSearchBtn();
+});
+
+retDate.addEventListener('change', () => {
+  const hint = document.getElementById('ret-hint');
+  if (retDate.value && retDate.value < depDate.value) {
+    hint.className = 'field-hint err'; hint.textContent = '✗ Must be after depart';
+    retDate.value = '';
+  } else {
+    hint.className = 'field-hint'; hint.textContent = '';
+  }
+  updateSearchBtn();
+});
+
+/* ── Adults validation ────────────────────────────────────── */
+adultsInput.addEventListener('input', () => {
+  const hint = document.getElementById('adults-hint');
+  const v = parseInt(adultsInput.value, 10);
+  if (isNaN(v) || v < 1) {
+    hint.className = 'field-hint err'; hint.textContent = '✗ Min 1';
+    adultsInput.classList.add('invalid'); adultsInput.classList.remove('valid');
+  } else {
+    hint.className = 'field-hint'; hint.textContent = '';
+    adultsInput.classList.remove('invalid'); adultsInput.classList.add('valid');
+  }
+  updateSearchBtn();
+});
+
+/* ── Enable/disable search button ────────────────────────── */
+function updateSearchBtn() {
+  const ok = validated.origin && validated.dest && depDate.value &&
+    parseInt(adultsInput.value, 10) >= 1;
+  btnSearch.disabled = !ok;
+  if (ok) {
+    const trip = retDate.value ? 'Round-trip' : 'One-way';
+    formMeta.textContent = `${trip} · ${cabinSel.value} · ${adultsInput.value} adult(s)`;
+  } else {
+    formMeta.textContent = '';
+  }
+}
+
+/* ── Search ───────────────────────────────────────────────── */
+btnSearch.addEventListener('click', doSearch);
+
+async function doSearch() {
+  const payload = {
+    origin_id:  state.originId,
+    dest_id:    state.destId,
+    dep_date:   depDate.value,
+    ret_date:   retDate.value || null,
+    adults:     parseInt(adultsInput.value, 10),
+    cabin:      cabinSel.value,
+    sort:       sortSel.value,
+  };
+
+  // Show overlay
+  loadingMsg.textContent = 'SCANNING THE SKY';
+  overlay.classList.add('visible');
+  btnSearch.classList.add('loading');
+  btnSearch.disabled = true;
+
+  // Cycle status messages
+  const msgs = ['SCANNING THE SKY', 'QUERYING ROUTES', 'PARSING RESULTS', 'SORTING BY PRICE'];
+  let mi = 0;
+  const ticker = setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    loadingMsg.textContent = msgs[mi];
+  }, 1800);
+
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    clearInterval(ticker);
+    overlay.classList.remove('visible');
+
+    if (!res.ok) {
+      showError(data.detail || 'Search failed');
+    } else {
+      state.flights   = data.flights || [];
+      state.sortCol   = 'price';
+      state.sortDir   = 1;
+      state.filter    = 'all';
+      const trip = retDate.value ? 'Round-trip' : 'One-way';
+      renderResults(state.originName, state.destName, depDate.value, retDate.value, trip);
+    }
+  } catch (e) {
+    clearInterval(ticker);
+    overlay.classList.remove('visible');
+    showError('Network error: ' + e.message);
+  } finally {
+    btnSearch.classList.remove('loading');
+    updateSearchBtn();
+  }
+}
+
+/* ── Render results ───────────────────────────────────────── */
+function renderResults(originName, destName, dep, ret, tripType) {
+  const section = document.getElementById('results-section');
+  const container = document.getElementById('results-container');
+
+  document.getElementById('route-label').textContent =
+    `${originName} → ${destName}  ·  ${dep}${ret ? ' → ' + ret : ''}  ·  ${tripType}`;
+
+  section.style.display = 'block';
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  renderStats();
+  renderTable();
+}
+
+function renderStats() {
+  const strip   = document.getElementById('stats-strip');
+  const visible = filteredFlights();
+  if (!visible.length) { strip.innerHTML = '<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">No flights found.</span>'; return; }
+
+  const prices  = visible.map(f => priceNum(f.price)).filter(n => !isNaN(n));
+  const minP    = Math.min(...prices);
+  const maxP    = Math.max(...prices);
+  const nonstop = visible.filter(f => f.stops === 'Nonstop').length;
+  const airlines= new Set(visible.map(f => f.airline)).size;
+
+  strip.innerHTML = `
+    <div class="stat"><div class="stat-value">${visible.length}</div><div class="stat-label">Flights</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--green)">$${minP}</div><div class="stat-label">Cheapest</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--text-dim)">$${maxP}</div><div class="stat-label">Most Expensive</div></div>
+    <div class="stat"><div class="stat-value">${nonstop}</div><div class="stat-label">Nonstop</div></div>
+    <div class="stat"><div class="stat-value">${airlines}</div><div class="stat-label">Airlines</div></div>
+  `;
+}
+
+function renderTable() {
+  const container = document.getElementById('results-container');
+  const flights = sortedFlights();
+
+  if (!flights.length) {
+    container.innerHTML = '<div class="empty-box">No flights match the current filter.</div>';
+    return;
+  }
+
+  const minP = Math.min(...flights.map(f => priceNum(f.price)).filter(n => !isNaN(n)));
+
+  const arrow = (col) => {
+    if (state.sortCol !== col) return '<span class="sort-arrow">⇅</span>';
+    return `<span class="sort-arrow">${state.sortDir === 1 ? '↑' : '↓'}</span>`;
+  };
+
+  let html = `
+  <div class="table-wrap">
+  <table id="results-table">
+    <thead>
+      <tr>
+        <th onclick="sortBy('airline')">Airline ${arrow('airline')}</th>
+        <th onclick="sortBy('price')">Price ${arrow('price')}</th>
+        <th>Route</th>
+        <th onclick="sortBy('departure_time')">Depart ${arrow('departure_time')}</th>
+        <th onclick="sortBy('arrival_time')">Arrive ${arrow('arrival_time')}</th>
+        <th onclick="sortBy('duration')">Duration ${arrow('duration')}</th>
+        <th onclick="sortBy('stops')">Stops ${arrow('stops')}</th>
+        <th class="th-co2" onclick="sortBy('co2_kg')">CO₂ ${arrow('co2_kg')}</th>
+        <th>Extras</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  flights.forEach((f, i) => {
+    const pNum   = priceNum(f.price);
+    const isCheapest = pNum === minP;
+    const hasLay = f.layover_stops && f.layover_stops.length > 0;
+    const rowId  = `row-${i}`;
+
+    // stops badge
+    let stopsBadge;
+    const sl = (f.stops || '').toLowerCase();
+    if (sl === 'nonstop') {
+      stopsBadge = `<span class="badge badge-nonstop">NONSTOP</span>`;
+    } else if (sl.includes('1')) {
+      stopsBadge = `<span class="badge badge-stop">${f.stops}</span>`;
+    } else {
+      stopsBadge = `<span class="badge badge-stops">${f.stops}</span>`;
+    }
+
+    // co2 pill
+    let co2html = '—';
+    if (f.co2_kg) {
+      const diff = parseInt(f.co2_percent_diff || '0', 10);
+      const cls  = diff < -5 ? 'co2-low' : diff > 20 ? 'co2-high' : 'co2-mid';
+      const sign = diff > 0 ? '+' : '';
+      co2html = `<span class="co2-pill ${cls}">${f.co2_kg}kg ${sign}${diff}%</span>`;
+    }
+
+    // extras
+    let extras = [];
+    if (f.carry_on_excluded) extras.push('<span class="icon-warn" title="No overhead bin carry-on">🚫👜</span>');
+
+    const priceClass = pNum > minP * 2 ? 'td-price expensive' : 'td-price';
+    const expandClass = hasLay ? 'expandable' : '';
+    const expandIcon  = hasLay ? `<span class="expand-icon" id="ei-${i}">▶</span>` : '';
+
+    html += `
+    <tr class="${expandClass}" ${hasLay ? `onclick="toggleLayover(${i})"` : ''}>
+      <td class="td-airline">${expandIcon}${escHtml(f.airline)}</td>
+      <td class="${priceClass}">${isCheapest ? '★ ' : ''}${escHtml(f.price)}</td>
+      <td class="td-route"><span>${escHtml(f.origin)}</span><span class="arrow"> → </span><span>${escHtml(f.destination)}</span></td>
+      <td>${escHtml(f.departure_time)}</td>
+      <td>${escHtml(f.arrival_time)}</td>
+      <td>${escHtml(f.duration)}</td>
+      <td class="td-stops">${stopsBadge}</td>
+      <td class="td-co2">${co2html}</td>
+      <td>${extras.join(' ') || '—'}</td>
+    </tr>`;
+
+    if (hasLay) {
+      html += `<tr class="layover-row" id="${rowId}"><td colspan="9">`;
+      html += `<span style="color:var(--cyan-dim);margin-right:8px">LAYOVERS:</span>`;
+      f.layover_stops.forEach(ls => {
+        const name = ls.airport_name || ls.airport_code || '';
+        const city = ls.city || '';
+        const dur  = ls.duration || '';
+        html += `<span style="margin-right:16px">${escHtml(name)}${city ? ' / ' + escHtml(city) : ''} — ${escHtml(dur)}</span>`;
+      });
+      html += `</td></tr>`;
+    }
+  });
+
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function toggleLayover(i) {
+  const row  = document.getElementById(`row-${i}`);
+  const icon = document.getElementById(`ei-${i}`);
+  const tr   = row?.previousElementSibling;
+  if (!row) return;
+  const vis = row.classList.toggle('visible');
+  if (tr)  tr.classList.toggle('expanded', vis);
+}
+
+/* ── Sorting ──────────────────────────────────────────────── */
+function sortBy(col) {
+  if (state.sortCol === col) state.sortDir *= -1;
+  else { state.sortCol = col; state.sortDir = 1; }
+  renderTable();
+}
+
+function sortedFlights() {
+  const fs = filteredFlights().slice();
+  const col = state.sortCol;
+  fs.sort((a, b) => {
+    let av = a[col] ?? '', bv = b[col] ?? '';
+    if (col === 'price') { av = priceNum(a.price); bv = priceNum(b.price); }
+    else if (col === 'co2_kg') { av = parseFloat(av)||0; bv = parseFloat(bv)||0; }
+    else if (col === 'departure_time' || col === 'arrival_time') {
+      av = timeToMins(av); bv = timeToMins(bv);
+    }
+    if (av < bv) return -state.sortDir;
+    if (av > bv) return  state.sortDir;
+    return 0;
+  });
+  return fs;
+}
+
+/* ── Filtering ────────────────────────────────────────────── */
+function applyFilter(chip) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  state.filter = chip.dataset.filter;
+  renderStats();
+  renderTable();
+}
+
+function filteredFlights() {
+  let fs = state.flights;
+  if (state.filter === 'nonstop')    fs = fs.filter(f => (f.stops||'').toLowerCase() === 'nonstop');
+  if (state.filter === 'with-carryOn') fs = fs.filter(f => !f.carry_on_excluded);
+  return fs;
+}
+
+/* ── CSV export ───────────────────────────────────────────── */
+function exportCsv() {
+  const fs = sortedFlights();
+  if (!fs.length) return;
+
+  const headers = ['Airline','Price','Origin','Destination','Depart','Arrive','Duration','Stops','CO2_kg','CO2_pct','CarryOn_Excluded','Layovers'];
+  const rows = fs.map(f => [
+    f.airline, f.price, f.origin, f.destination,
+    f.departure_time, f.arrival_time, f.duration, f.stops,
+    f.co2_kg, f.co2_percent_diff,
+    f.carry_on_excluded ? 'Yes' : 'No',
+    (f.layover_stops||[]).map(l => `${l.airport_name||l.airport_code||''} (${l.duration||''})`).join('; ')
+  ]);
+
+  let csv = headers.join(',') + '\n';
+  rows.forEach(row => {
+    csv += row.map(cell => `"${String(cell||'').replace(/"/g,'""')}"`).join(',') + '\n';
+  });
+
+  const origin = (state.originName||'origin').replace(/\s+/g,'_');
+  const dest   = (state.destName||'dest').replace(/\s+/g,'_');
+  const dep    = depDate.value;
+  const blob   = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href       = url;
+  a.download   = `skyprowl_${origin}_${dest}_${dep}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Error display ────────────────────────────────────────── */
+function showError(msg) {
+  const section = document.getElementById('results-section');
+  const container = document.getElementById('results-container');
+  section.style.display = 'block';
+  document.getElementById('stats-strip').innerHTML = '';
+  container.innerHTML = `<div class="error-box">✗ ${escHtml(msg)}</div>`;
+  section.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ── Helpers ──────────────────────────────────────────────── */
+function priceNum(p) {
+  const d = (p||'').replace(/[^\d.]/g,'');
+  return d ? parseFloat(d) : Infinity;
+}
+function timeToMins(t) {
+  const m = (t||'').match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  if (!m) return 0;
+  let h = parseInt(m[1],10), mn = parseInt(m[2],10);
+  if (m[3]) { if (m[3].toUpperCase()==='PM' && h<12) h+=12; if (m[3].toUpperCase()==='AM' && h===12) h=0; }
+  return h*60+mn;
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
