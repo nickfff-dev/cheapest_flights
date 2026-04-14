@@ -39,7 +39,6 @@ body {
   overflow-x: hidden;
 }
 
-/* scanline overlay */
 body::after {
   content: '';
   position: fixed;
@@ -64,11 +63,7 @@ body::after {
   top: 0;
   z-index: 100;
 }
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.header-brand { display: flex; align-items: center; gap: 12px; }
 .header-logo {
   font-family: var(--mono);
   font-size: 20px;
@@ -98,23 +93,18 @@ body::after {
   background: var(--green);
   animation: pulse 2s infinite;
 }
-@keyframes pulse {
-  0%,100% { opacity: 1; }
-  50%      { opacity: 0.3; }
-}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* ─── LAYOUT ──────────────────────────────────────────────── */
 .main { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
 .setup-grid {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 24px;
   align-items: start;
 }
-@media (max-width: 900px) {
-  .setup-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 900px) { .setup-grid { grid-template-columns: 1fr; } }
 
 /* ─── CARDS ───────────────────────────────────────────────── */
 .card {
@@ -134,10 +124,7 @@ body::after {
   align-items: center;
   gap: 8px;
 }
-.card-title::before {
-  content: '//';
-  color: var(--amber-dim);
-}
+.card-title::before { content: '//'; color: var(--amber-dim); }
 
 /* ─── FORM ELEMENTS ───────────────────────────────────────── */
 .field { margin-bottom: 18px; }
@@ -150,7 +137,6 @@ body::after {
   color: var(--text3);
   margin-bottom: 6px;
 }
-.field .hint { color: var(--amber-dim); }
 
 input[type=text], input[type=date], select {
   width: 100%;
@@ -164,22 +150,15 @@ input[type=text], input[type=date], select {
   outline: none;
   transition: border-color 0.15s;
 }
-input[type=text]:focus, input[type=date]:focus, select:focus {
-  border-color: var(--amber);
-}
-input.input-valid  { border-color: var(--green); }
-input.input-error  { border-color: var(--red); }
-
+input[type=text]:focus, input[type=date]:focus, select:focus { border-color: var(--amber); }
+input.input-valid { border-color: var(--green); }
+input.input-error { border-color: var(--red); }
 select option { background: var(--bg3); }
 
 .input-row { display: flex; gap: 8px; }
 .input-row input { flex: 1; }
 
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.slider-row {
-  display: flex; align-items: center; gap: 10px;
-}
+.slider-row { display: flex; align-items: center; gap: 10px; }
 .slider-row input[type=range] { flex: 1; accent-color: var(--amber); }
 .slider-row span {
   font-family: var(--mono);
@@ -189,18 +168,8 @@ select option { background: var(--bg3); }
   text-align: right;
 }
 
-.valid-msg {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--green);
-  margin-top: 5px;
-}
-.error-msg {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--red);
-  margin-top: 5px;
-}
+.valid-msg { font-family: var(--mono); font-size: 11px; color: var(--green); margin-top: 5px; }
+.error-msg { font-family: var(--mono); font-size: 11px; color: var(--red);   margin-top: 5px; }
 
 /* ─── BUTTONS ─────────────────────────────────────────────── */
 button {
@@ -215,13 +184,8 @@ button {
 }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-primary {
-  background: var(--amber);
-  color: #000;
-  padding: 10px 20px;
-}
+.btn-primary { background: var(--amber); color: #000; padding: 10px 20px; }
 .btn-primary:hover:not(:disabled) { background: var(--amber2); }
-
 .btn-full { width: 100%; }
 
 .btn-secondary {
@@ -253,8 +217,15 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   color: var(--blue);
   border: 1px solid var(--blue);
   padding: 7px 14px;
+  position: relative;
+  min-width: 130px;
 }
-.btn-download:hover { background: rgba(59,130,246,.1); }
+.btn-download:hover:not(:disabled) { background: rgba(59,130,246,.1); }
+.btn-download.loading {
+  color: var(--text3);
+  border-color: var(--text3);
+  cursor: wait;
+}
 
 .btn-xs {
   background: var(--bg3);
@@ -281,17 +252,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .task-summary strong { color: var(--amber); }
 
 /* ─── AIRPORT SELECTION ───────────────────────────────────── */
-.airport-select-header {
-  margin-bottom: 14px;
-}
-.airport-select-header h2 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.airport-select-header { margin-bottom: 14px; }
 .count {
   font-family: var(--mono);
   font-size: 11px;
@@ -307,10 +268,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   flex-wrap: wrap;
   align-items: center;
 }
-.airport-search {
-  flex: 1;
-  min-width: 140px;
-}
+.airport-search { flex: 1; min-width: 140px; }
 .airport-controls select { flex: 0 0 160px; }
 
 .airport-list {
@@ -321,7 +279,6 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
 .country-group { margin-bottom: 4px; }
-
 .country-header {
   display: flex;
   align-items: center;
@@ -338,20 +295,9 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 .country-header:hover { border-color: var(--amber-dim); }
 .country-header input[type=checkbox] { accent-color: var(--amber); }
-.country-count {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text3);
-}
+.country-count { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--text3); }
 
-.airport-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px 4px 6px 20px;
-}
-
+.airport-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 4px 6px 20px; }
 .airport-chip {
   display: flex;
   align-items: center;
@@ -364,24 +310,9 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   background: var(--bg);
 }
 .airport-chip:hover { border-color: var(--amber-dim); }
-.airport-chip.selected {
-  border-color: var(--amber);
-  background: rgba(245,158,11,.08);
-}
-.chip-code {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--amber);
-}
-.chip-name {
-  font-size: 10px;
-  color: var(--text3);
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.airport-chip.selected { border-color: var(--amber); background: rgba(245,158,11,.08); }
+.chip-code { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--amber); }
+.chip-name { font-size: 10px; color: var(--text3); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── PROGRESS VIEW ───────────────────────────────────────── */
 .progress-header {
@@ -401,10 +332,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   align-items: center;
   gap: 12px;
 }
-.progress-date {
-  color: var(--amber);
-  font-size: 13px;
-}
+.progress-date { color: var(--amber); font-size: 13px; }
 .progress-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ─── STATS ───────────────────────────────────────────────── */
@@ -418,28 +346,10 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   overflow: hidden;
   margin-bottom: 12px;
 }
-@media (max-width: 700px) {
-  .stats-bar { grid-template-columns: repeat(3, 1fr); }
-}
-.stat {
-  background: var(--bg2);
-  padding: 14px 16px;
-  text-align: center;
-}
-.stat-val {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 4px;
-  color: var(--text);
-}
-.stat-label {
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text3);
-}
+@media (max-width: 700px) { .stats-bar { grid-template-columns: repeat(3, 1fr); } }
+.stat { background: var(--bg2); padding: 14px 16px; text-align: center; }
+.stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1; margin-bottom: 4px; color: var(--text); }
+.stat-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
 .stat.s-ok   .stat-val { color: var(--green); }
 .stat.s-err  .stat-val { color: var(--red); }
 .stat.s-info .stat-val { color: var(--blue); }
@@ -464,10 +374,8 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .progress-bar-fill::after {
   content: '';
   position: absolute;
-  right: 0;
-  top: -2px;
-  width: 10px;
-  height: 10px;
+  right: 0; top: -2px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: var(--amber2);
   box-shadow: 0 0 8px var(--amber);
@@ -493,16 +401,8 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   border-radius: 3px;
 }
 .filter-tab:hover { color: var(--text); }
-.filter-tab.active {
-  background: var(--amber);
-  color: #000;
-  border-color: var(--amber);
-}
-.table-search {
-  width: 220px !important;
-  padding: 5px 10px !important;
-  font-size: 12px !important;
-}
+.filter-tab.active { background: var(--amber); color: #000; border-color: var(--amber); }
+.table-search { width: 220px !important; padding: 5px 10px !important; font-size: 12px !important; }
 
 /* ─── RESULTS TABLE ───────────────────────────────────────── */
 .results-table-wrap {
@@ -511,11 +411,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   overflow: auto;
   max-height: 620px;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
 thead th {
   background: var(--bg3);
   font-family: var(--mono);
@@ -531,9 +427,7 @@ thead th {
 }
 tbody tr { border-bottom: 1px solid rgba(30,45,61,.6); }
 tbody tr:last-child { border-bottom: none; }
-tbody tr.country-row {
-  background: var(--bg3);
-}
+tbody tr.country-row { background: var(--bg3); }
 tbody tr.country-row td {
   font-family: var(--mono);
   font-size: 10px;
@@ -545,21 +439,9 @@ tbody tr.country-row td {
 tbody tr.airport-row:hover { background: rgba(245,158,11,.04); }
 tbody tr.airport-row td { padding: 9px 14px; vertical-align: middle; }
 
-.airport-code-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.airport-code-text {
-  font-family: var(--mono);
-  font-weight: 700;
-  color: var(--amber);
-  font-size: 13px;
-}
-.airport-name-small {
-  color: var(--text3);
-  font-size: 11px;
-}
+.airport-code-cell { display: flex; align-items: center; gap: 8px; }
+.airport-code-text { font-family: var(--mono); font-weight: 700; color: var(--amber); font-size: 13px; }
+.airport-name-small { color: var(--text3); font-size: 11px; }
 
 /* ─── STATUS BADGES ───────────────────────────────────────── */
 .badge {
@@ -578,35 +460,40 @@ tbody tr.airport-row td { padding: 9px 14px; vertical-align: middle; }
 .badge-stopped   { background: rgba(245,158,11,.12);  color: var(--amber); border: 1px solid rgba(245,158,11,.3); }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
-/* ─── WINDOW PROGRESS ─────────────────────────────────────── */
-.win-progress {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.win-count {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text3);
-  min-width: 28px;
-}
-.win-bar {
-  flex: 1;
-  height: 4px;
-  background: var(--bg3);
-  border-radius: 2px;
-  overflow: hidden;
-  min-width: 60px;
-}
-.win-fill {
-  height: 100%;
-  background: var(--green);
-  border-radius: 2px;
-  transition: width 0.3s;
-}
 .flights-count { color: var(--amber); font-family: var(--mono); font-weight: 700; }
 
-/* ─── LOADING ─────────────────────────────────────────────── */
+/* ─── EXPORT TOAST ────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  animation: slideUp 0.2s ease;
+}
+.toast-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.toast-done { color: var(--green); font-size: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── LOADING / EMPTY ─────────────────────────────────────── */
 .loading {
   display: flex;
   align-items: center;
@@ -617,15 +504,7 @@ tbody tr.airport-row td { padding: 9px 14px; vertical-align: middle; }
   letter-spacing: 2px;
 }
 .loading::before { content: '▶ '; color: var(--amber); animation: blink 1s infinite; }
-
-/* ─── EMPTY STATE ─────────────────────────────────────────── */
-.empty-state {
-  padding: 40px;
-  text-align: center;
-  font-family: var(--mono);
-  color: var(--text3);
-  font-size: 12px;
-}
+.empty-state { padding: 40px; text-align: center; font-family: var(--mono); color: var(--text3); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -658,19 +537,28 @@ function StatusBadge({ status }) {
   return <span className={`badge ${cls}`}>{label}</span>;
 }
 
+// ─── EXPORT TOAST ─────────────────────────────────────────────────────────────
+function ExportToast({ state }) {
+  if (!state) return null;
+  return (
+    <div className="toast">
+      <span className="toast-done">✓</span> Download started!
+    </div>
+  );
+}
+
 // ─── SETUP FORM ──────────────────────────────────────────────────────────────
 function SetupForm({ airports, onStart }) {
-  const [origin, setOrigin]           = useState('');
-  const [validated, setValidated]     = useState(null);
-  const [validating, setValidating]   = useState(false);
-  const [validError, setValidError]   = useState('');
-  const [date, setDate]               = useState('');
-  const [timeWindows, setTimeWindows] = useState(3);
-  const [maxWorkers, setMaxWorkers]   = useState(10);
-  const [selected, setSelected]       = useState(() => new Set(airports.map(a => a.code)));
-  const [airportQ, setAirportQ]       = useState('');
-  const [countryF, setCountryF]       = useState('all');
-  const [starting, setStarting]       = useState(false);
+  const [origin, setOrigin]         = useState('');
+  const [validated, setValidated]   = useState(null);
+  const [validating, setValidating] = useState(false);
+  const [validError, setValidError] = useState('');
+  const [date, setDate]             = useState('');
+  const [maxWorkers, setMaxWorkers] = useState(10);
+  const [selected, setSelected]     = useState(() => new Set(airports.map(a => a.code)));
+  const [airportQ, setAirportQ]     = useState('');
+  const [countryF, setCountryF]     = useState('all');
+  const [starting, setStarting]     = useState(false);
 
   const countries = [...new Set(airports.map(a => a.country))].sort();
 
@@ -702,8 +590,8 @@ function SetupForm({ airports, onStart }) {
   });
 
   const toggleCountry = country => {
-    const codes    = airports.filter(a => a.country === country).map(a => a.code);
-    const allSel   = codes.every(c => selected.has(c));
+    const codes  = airports.filter(a => a.country === country).map(a => a.code);
+    const allSel = codes.every(c => selected.has(c));
     setSelected(prev => {
       const next = new Set(prev);
       if (allSel) codes.forEach(c => next.delete(c));
@@ -716,18 +604,16 @@ function SetupForm({ airports, onStart }) {
     if (!validated || !date || selected.size === 0) return;
     setStarting(true);
     await onStart({
-      origin_id:          validated.origin_id,
-      origin_name:        validated.origin_name,
-      dep_date:           date,
-      time_windows:       timeWindows,
-      max_workers:        maxWorkers,
-      selected_airports:  [...selected],
+      origin_id:         validated.origin_id,
+      origin_name:       validated.origin_name,
+      dep_date:          date,
+      max_workers:       maxWorkers,
+      selected_airports: [...selected],
     });
     setStarting(false);
   };
 
-  const today    = new Date().toISOString().split('T')[0];
-  const totalReq = selected.size * timeWindows;
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="setup-grid">
@@ -759,28 +645,18 @@ function SetupForm({ airports, onStart }) {
           <input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} />
         </div>
 
-        <div className="field-row">
-          <div className="field">
-            <label>Time Windows <span className="hint">&nbsp;({24 / timeWindows}h each)</span></label>
-            <select value={timeWindows} onChange={e => setTimeWindows(Number(e.target.value))}>
-              {[1, 2, 3, 4, 6, 8, 12].map(n => (
-                <option key={n} value={n}>{n} window{n > 1 ? 's' : ''}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label>Workers</label>
-            <div className="slider-row">
-              <input type="range" min={1} max={30} value={maxWorkers}
-                onChange={e => setMaxWorkers(Number(e.target.value))} />
-              <span>{maxWorkers}</span>
-            </div>
+        <div className="field">
+          <label>Workers</label>
+          <div className="slider-row">
+            <input type="range" min={1} max={30} value={maxWorkers}
+              onChange={e => setMaxWorkers(Number(e.target.value))} />
+            <span>{maxWorkers}</span>
           </div>
         </div>
 
         <div className="task-summary">
           <span>Destinations: <strong>{selected.size}</strong></span>
-          <span>Requests: <strong>{totalReq}</strong></span>
+          <span>Requests: <strong>{selected.size}</strong></span>
           <span>Workers: <strong>{maxWorkers}</strong></span>
         </div>
 
@@ -862,11 +738,13 @@ function SetupForm({ airports, onStart }) {
 
 // ─── PROGRESS VIEW ────────────────────────────────────────────────────────────
 function ProgressView({ taskId, onNewTask }) {
-  const [task, setTask]       = useState(null);
+  const [task, setTask]         = useState(null);
   const [airports, setAirports] = useState([]);
-  const [filter, setFilter]   = useState('all');
-  const [search, setSearch]   = useState('');
-  const pollRef               = useRef(null);
+  const [filter, setFilter]     = useState('all');
+  const [search, setSearch]     = useState('');
+  const [exportState, setExportState] = useState(null); // null | 'loading' | 'done'
+  const pollRef                 = useRef(null);
+  const exportTimerRef          = useRef(null);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -883,55 +761,49 @@ function ProgressView({ taskId, onNewTask }) {
     fetch('/api/airports').then(r => r.json()).then(setAirports).catch(() => {});
     fetchStatus();
     pollRef.current = setInterval(fetchStatus, 2000);
-    return () => clearInterval(pollRef.current);
+    return () => { clearInterval(pollRef.current); clearTimeout(exportTimerRef.current); };
   }, [fetchStatus]);
 
   const stop = async () => {
     await fetch(`/api/tasks/${taskId}/stop`, { method: 'POST' });
     fetchStatus();
   };
+
   const resume = async () => {
     await fetch(`/api/tasks/${taskId}/resume`, { method: 'POST' });
     clearInterval(pollRef.current);
     pollRef.current = setInterval(fetchStatus, 2000);
     fetchStatus();
   };
-  const download = async () => {
-    const res  = await fetch(`/api/tasks/${taskId}/download`);
-    const data = await res.json();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = `euroscan_${(task?.origin_name || 'flights').replace(/\s/g,'_')}_${task?.dep_date || ''}.json`;
+
+  const download = () => {
+    // Direct navigation — browser download dialog opens immediately as bytes
+    // arrive, no fetch buffering delay behind nginx.
+    const a = document.createElement('a');
+    a.href   = `/api/tasks/${taskId}/download`;
+    a.target = '_blank';
     a.click();
-    URL.revokeObjectURL(url);
+    setExportState('done');
+    exportTimerRef.current = setTimeout(() => setExportState(null), 2500);
   };
 
   if (!task) return <div className="loading">CONNECTING TO TASK</div>;
 
-  const pct      = task.total_jobs > 0 ? Math.round((task.completed_jobs / task.total_jobs) * 100) : 0;
+  const pct        = task.total_jobs > 0 ? Math.round((task.completed_jobs / task.total_jobs) * 100) : 0;
   const airportMap = Object.fromEntries(airports.map(a => [a.code, a]));
 
-  // Build per-airport rows from airport_summary
+  // Flat rows — airport_summary is now {status, flights, error} per code
   const rows = Object.entries(task.airport_summary || {}).map(([code, info]) => ({
     code,
     name:    airportMap[code]?.name    || code,
     country: airportMap[code]?.country || '?',
-    ...info,
+    status:  info.status,
+    flights: info.flights,
+    error:   info.error,
   }));
 
-  // Derive airport-level status
-  const rowStatus = r => {
-    if (r.running  > 0)                               return 'running';
-    if (r.completed === r.total && r.total > 0)       return 'completed';
-    if (r.failed   > 0 && r.failed === r.total)       return 'failed';
-    if (r.failed   > 0)                               return 'failed';
-    return 'pending';
-  };
-
   const filtered = rows.filter(r => {
-    if (filter !== 'all' && rowStatus(r) !== filter) return false;
+    if (filter !== 'all' && r.status !== filter) return false;
     if (search) {
       const s = search.toUpperCase();
       if (!r.code.includes(s) && !r.name.toUpperCase().includes(s) && !r.country.toUpperCase().includes(s))
@@ -940,7 +812,6 @@ function ProgressView({ taskId, onNewTask }) {
     return true;
   });
 
-  // Group by country
   const byCountry = {};
   filtered.forEach(r => {
     if (!byCountry[r.country]) byCountry[r.country] = [];
@@ -949,10 +820,10 @@ function ProgressView({ taskId, onNewTask }) {
 
   const filterCounts = {
     all:       rows.length,
-    pending:   rows.filter(r => rowStatus(r) === 'pending').length,
-    running:   rows.filter(r => rowStatus(r) === 'running').length,
-    completed: rows.filter(r => rowStatus(r) === 'completed').length,
-    failed:    rows.filter(r => rowStatus(r) === 'failed').length,
+    pending:   rows.filter(r => r.status === 'pending').length,
+    running:   rows.filter(r => r.status === 'running').length,
+    completed: rows.filter(r => r.status === 'completed').length,
+    failed:    rows.filter(r => r.status === 'failed').length,
   };
 
   return (
@@ -966,9 +837,11 @@ function ProgressView({ taskId, onNewTask }) {
           <StatusBadge status={task.status} />
         </div>
         <div className="progress-actions">
-          {task.status === 'running'  && <button className="btn-stop"     onClick={stop}>⏸ PAUSE</button>}
-          {task.status === 'stopped'  && <button className="btn-resume"   onClick={resume}>▶ RESUME</button>}
-          <button className="btn-download" onClick={download}>⬇ EXPORT JSON</button>
+          {task.status === 'running' && <button className="btn-stop"   onClick={stop}>⏸ PAUSE</button>}
+          {task.status === 'stopped' && <button className="btn-resume" onClick={resume}>▶ RESUME</button>}
+          <button className="btn-download" onClick={download}>
+            ⬇ EXPORT JSON
+          </button>
           <button className="btn-secondary" onClick={onNewTask}>+ NEW SCAN</button>
         </div>
       </div>
@@ -977,7 +850,7 @@ function ProgressView({ taskId, onNewTask }) {
       <div className="stats-bar">
         <div className="stat">
           <div className="stat-val">{task.total_jobs}</div>
-          <div className="stat-label">Total Jobs</div>
+          <div className="stat-label">Airports</div>
         </div>
         <div className="stat s-ok">
           <div className="stat-val">{task.completed_jobs}</div>
@@ -1003,7 +876,7 @@ function ProgressView({ taskId, onNewTask }) {
 
       {/* Progress bar */}
       <div className="progress-bar-wrap">
-        <div className="progress-bar-fill" style={{width: `${pct}%`}} />
+        <div className="progress-bar-fill" style={{width:`${pct}%`}} />
       </div>
 
       {/* Table controls */}
@@ -1036,8 +909,8 @@ function ProgressView({ taskId, onNewTask }) {
               <th>Airport</th>
               <th>Country</th>
               <th>Status</th>
-              <th>Flights</th>
-              <th>Windows</th>
+              <th>Flights Found</th>
+              <th>Error</th>
             </tr>
           </thead>
           <tbody>
@@ -1048,37 +921,28 @@ function ProgressView({ taskId, onNewTask }) {
                     {FLAGS[country] || '🌍'} {country} — {crows.length} airport{crows.length !== 1 ? 's' : ''}
                   </td>
                 </tr>
-                {crows.map(r => {
-                  const st  = rowStatus(r);
-                  const pct = r.total > 0 ? ((r.completed / r.total) * 100).toFixed(0) : 0;
-                  return (
-                    <tr key={r.code} className="airport-row">
-                      <td>
-                        <div className="airport-code-cell">
-                          <span className="airport-code-text">{r.code}</span>
-                          <span className="airport-name-small">{r.name}</span>
-                        </div>
-                      </td>
-                      <td style={{color:'var(--text3)', fontSize:'11px'}}>
-                        {FLAGS[r.country] || ''} {r.country}
-                      </td>
-                      <td><StatusBadge status={st} /></td>
-                      <td>
-                        {r.flights > 0
-                          ? <span className="flights-count">{r.flights}</span>
-                          : <span style={{color:'var(--text3)'}}>—</span>}
-                      </td>
-                      <td style={{minWidth:'120px'}}>
-                        <div className="win-progress">
-                          <span className="win-count">{r.completed}/{r.total}</span>
-                          <div className="win-bar">
-                            <div className="win-fill" style={{width:`${pct}%`}} />
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {crows.map(r => (
+                  <tr key={r.code} className="airport-row">
+                    <td>
+                      <div className="airport-code-cell">
+                        <span className="airport-code-text">{r.code}</span>
+                        <span className="airport-name-small">{r.name}</span>
+                      </div>
+                    </td>
+                    <td style={{color:'var(--text3)', fontSize:'11px'}}>
+                      {FLAGS[r.country] || ''} {r.country}
+                    </td>
+                    <td><StatusBadge status={r.status} /></td>
+                    <td>
+                      {r.flights > 0
+                        ? <span className="flights-count">{r.flights}</span>
+                        : <span style={{color:'var(--text3)'}}>—</span>}
+                    </td>
+                    <td style={{fontFamily:'var(--mono)', fontSize:'10px', color:'var(--red)', maxWidth:'260px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                      {r.error || ''}
+                    </td>
+                  </tr>
+                ))}
               </React.Fragment>
             ))}
             {filtered.length === 0 && (
@@ -1089,14 +953,16 @@ function ProgressView({ taskId, onNewTask }) {
           </tbody>
         </table>
       </div>
+
+      <ExportToast state={exportState} />
     </div>
   );
 }
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 function App() {
-  const [phase, setPhase]     = useState('setup');
-  const [taskId, setTaskId]   = useState(null);
+  const [phase, setPhase]       = useState('setup');
+  const [taskId, setTaskId]     = useState(null);
   const [airports, setAirports] = useState([]);
 
   useEffect(() => {

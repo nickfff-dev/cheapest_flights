@@ -13,18 +13,17 @@ import threading
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from scraper.scraper import fetch_flights
 
 sys.path.insert(0, os.path.dirname(__file__))
 from google_flights_cheapest.google_flights_cheapest import (
     get_freebase_id,
     build_google_url,
-    fetch_via_brightdata,
     parse_flights,
 )
 
@@ -324,7 +323,7 @@ EUROPEAN_AIRPORTS: List[Dict[str, str]] = [
     {"code": "KEF", "name": "Reykjavik Keflavik",     "country": "Iceland"},
     {"code": "AEY", "name": "Akureyri",               "country": "Iceland"},
     {"code": "EGS", "name": "Egilsstadir",            "country": "Iceland"},
-    # Turkey (Thrace / major European gateway hubs)
+    # Turkey
     {"code": "IST", "name": "Istanbul Airport",       "country": "Turkey"},
     {"code": "SAW", "name": "Istanbul Sabiha Gokcen", "country": "Turkey"},
     {"code": "ESB", "name": "Ankara",                 "country": "Turkey"},
@@ -384,7 +383,6 @@ class StartTaskRequest(BaseModel):
     origin_id: str
     origin_name: str
     dep_date: str
-    time_windows: int = 3
     max_workers: int = 10
     selected_airports: Optional[List[str]] = None
 
@@ -393,35 +391,25 @@ class StartTaskRequest(BaseModel):
 def start_task(req: StartTaskRequest):
     task_id = str(uuid.uuid4())
 
-    if req.time_windows not in (1, 2, 3, 4, 6, 8, 12, 24):
-        raise HTTPException(status_code=400, detail="time_windows must divide 24 evenly")
-
     airports = req.selected_airports or [a["code"] for a in EUROPEAN_AIRPORTS]
-    band_size = 24 // req.time_windows
 
+    # One job per destination airport
     jobs: Dict[str, dict] = {}
     for airport_code in airports:
-        for i in range(req.time_windows):
-            win_start = i * band_size
-            win_end = (i + 1) * band_size
-            key = f"{airport_code}:{win_start}-{win_end}"
-            jobs[key] = {
-                "airport_code": airport_code,
-                "win_start": win_start,
-                "win_end": win_end,
-                "status": "pending",
-                "flight_count": 0,
-                "error": None,
-                "start_time": None,
-                "end_time": None,
-            }
+        jobs[airport_code] = {
+            "airport_code": airport_code,
+            "status": "pending",
+            "flight_count": 0,
+            "error": None,
+            "start_time": None,
+            "end_time": None,
+        }
 
     task = {
         "task_id": task_id,
         "origin_id": req.origin_id,
         "origin_name": req.origin_name,
         "dep_date": req.dep_date,
-        "time_windows": req.time_windows,
         "max_workers": req.max_workers,
         "airports": airports,
         "jobs": jobs,
@@ -448,37 +436,33 @@ def get_task_status(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    airport_summary: Dict[str, dict] = {}
-    for job in task["jobs"].values():
-        code = job["airport_code"]
-        if code not in airport_summary:
-            airport_summary[code] = {
-                "total": 0, "completed": 0, "failed": 0,
-                "running": 0, "pending": 0, "flights": 0,
-            }
-        s = airport_summary[code]
-        s["total"] += 1
-        s[job["status"]] = s.get(job["status"], 0) + 1
-        s["flights"] = len(task["results"].get(code, []))
-
-    total_jobs = len(task["jobs"])
+    total_jobs     = len(task["jobs"])
     completed_jobs = sum(1 for j in task["jobs"].values() if j["status"] in ("completed", "failed"))
     failed_jobs    = sum(1 for j in task["jobs"].values() if j["status"] == "failed")
     running_jobs   = sum(1 for j in task["jobs"].values() if j["status"] == "running")
 
+    airport_summary: Dict[str, dict] = {
+        code: {
+            "status":  job["status"],
+            "flights": len(task["results"].get(code, [])),
+            "error":   job["error"],
+        }
+        for code, job in task["jobs"].items()
+    }
+
     return {
-        "task_id":       task_id,
-        "status":        task["status"],
-        "origin_name":   task["origin_name"],
-        "dep_date":      task["dep_date"],
-        "total_jobs":    total_jobs,
-        "completed_jobs": completed_jobs,
-        "failed_jobs":   failed_jobs,
-        "running_jobs":  running_jobs,
-        "created_at":    task["created_at"],
-        "end_time":      task["end_time"],
+        "task_id":         task_id,
+        "status":          task["status"],
+        "origin_name":     task["origin_name"],
+        "dep_date":        task["dep_date"],
+        "total_jobs":      total_jobs,
+        "completed_jobs":  completed_jobs,
+        "failed_jobs":     failed_jobs,
+        "running_jobs":    running_jobs,
+        "created_at":      task["created_at"],
+        "end_time":        task["end_time"],
         "airport_summary": airport_summary,
-        "total_flights": sum(len(v) for v in task["results"].values()),
+        "total_flights":   sum(len(v) for v in task["results"].values()),
     }
 
 
@@ -514,31 +498,36 @@ def download_results(task_id: str):
         task = _tasks.get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+ 
+    origin_slug = task["origin_name"].replace(" ", "_")
+    filename    = f"euroscan_{origin_slug}_{task['dep_date']}.json"
+ 
     output = {
-        "task_id":       task_id,
-        "origin":        task["origin_name"],
-        "dep_date":      task["dep_date"],
-        "time_windows":  task["time_windows"],
-        "generated_at":  datetime.now().isoformat(),
-        "results":       task["results"],
+        "task_id":      task_id,
+        "origin":       task["origin_name"],
+        "dep_date":     task["dep_date"],
+        "generated_at": datetime.now().isoformat(),
+        "results":      task["results"],
     }
-    return JSONResponse(content=output)
+    def _iter():
+        yield json.dumps(output, indent=2, ensure_ascii=False)
+ 
+    return StreamingResponse(
+        _iter(),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ── Job execution ──────────────────────────────────────────────────────────────
 
-def _execute_job(task_id: str, job_info: dict) -> None:
-    airport_code = job_info["airport_code"]
-    win_start    = job_info["win_start"]
-    win_end      = job_info["win_end"]
-    key          = f"{airport_code}:{win_start}-{win_end}"
-
+def _execute_job(task_id: str, airport_code: str) -> None:
     with _tasks_lock:
         task = _tasks.get(task_id)
         if not task or task["stop_flag"].is_set():
             return
-        task["jobs"][key]["status"]     = "running"
-        task["jobs"][key]["start_time"] = datetime.now().isoformat()
+        task["jobs"][airport_code]["status"]     = "running"
+        task["jobs"][airport_code]["start_time"] = datetime.now().isoformat()
         origin_id = task["origin_id"]
         dep_date  = task["dep_date"]
 
@@ -547,11 +536,9 @@ def _execute_job(task_id: str, job_info: dict) -> None:
             origin_id, airport_code,
             dep_date=dep_date, ret_date=None,
             sort_order=2, adults=1, cabin=1,
-            dep_from_h=win_start, dep_to_h=win_end,
         )
-        html    = fetch_via_brightdata(url)
+        html    = fetch_flights(url)
         flights = parse_flights(html)
-
         records = [
             {
                 "airline":           fl.airline,
@@ -573,28 +560,18 @@ def _execute_job(task_id: str, job_info: dict) -> None:
         with _tasks_lock:
             task = _tasks.get(task_id)
             if task:
-                task["jobs"][key]["status"]       = "completed"
-                task["jobs"][key]["end_time"]      = datetime.now().isoformat()
-                task["jobs"][key]["flight_count"]  = len(records)
-
-                existing   = task["results"].setdefault(airport_code, [])
-                seen_keys  = {
-                    (r["airline"], r["departure_time"], r["origin"], r["destination"])
-                    for r in existing
-                }
-                for r in records:
-                    k2 = (r["airline"], r["departure_time"], r["origin"], r["destination"])
-                    if k2 not in seen_keys:
-                        existing.append(r)
-                        seen_keys.add(k2)
+                task["jobs"][airport_code]["status"]      = "completed"
+                task["jobs"][airport_code]["end_time"]    = datetime.now().isoformat()
+                task["jobs"][airport_code]["flight_count"] = len(records)
+                task["results"][airport_code] = records
 
     except Exception as exc:
         with _tasks_lock:
             task = _tasks.get(task_id)
             if task:
-                task["jobs"][key]["status"]   = "failed"
-                task["jobs"][key]["error"]    = str(exc)[:300]
-                task["jobs"][key]["end_time"] = datetime.now().isoformat()
+                task["jobs"][airport_code]["status"]   = "failed"
+                task["jobs"][airport_code]["error"]    = str(exc)[:300]
+                task["jobs"][airport_code]["end_time"] = datetime.now().isoformat()
 
 
 def _run_task(task_id: str) -> None:
@@ -605,22 +582,22 @@ def _run_task(task_id: str) -> None:
             return
         stop_flag   = task["stop_flag"]
         max_workers = task["max_workers"]
-        pending     = [v for v in task["jobs"].values() if v["status"] == "pending"]
+        pending     = [code for code, j in task["jobs"].items() if j["status"] == "pending"]
 
     job_q: queue.Queue = queue.Queue()
-    for job in pending:
-        job_q.put(job)
+    for code in pending:
+        job_q.put(code)
 
     def worker() -> None:
         while not stop_flag.is_set():
             try:
-                job_info = job_q.get(timeout=2)
+                airport_code = job_q.get(timeout=2)
             except queue.Empty:
                 break
             if stop_flag.is_set():
                 job_q.task_done()
                 break
-            _execute_job(task_id, job_info)
+            _execute_job(task_id, airport_code)
             job_q.task_done()
 
     n_workers = min(max_workers, max(len(pending), 1))
