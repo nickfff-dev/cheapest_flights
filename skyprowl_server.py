@@ -21,7 +21,7 @@ from pydantic import BaseModel, field_validator
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
-from google_flights_cheapest.google_flights_cheapest import (
+from cheapest_flights.cheapest_flights import (
     get_freebase_id,
     build_google_url,
     parse_flights,

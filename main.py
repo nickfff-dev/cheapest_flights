@@ -8,7 +8,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime
-from google_flights_cheapest.google_flights_cheapest import (
+from cheapest_flights.cheapest_flights import (
 parse_flights,decode_tfs,build_google_url,
 get_freebase_id,_price_sort_key, CABIN_CLASS, 
 Flight, _print_diagnostics,_detect_block,_is_date
@@ -24,7 +24,7 @@ def result_filename(origin, dest, dep_date, ret_date=None):
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="main.py",
-        description="Fetch cheapest Google Flights results via Bright Data.",
+        description="Fetch cheapest Flights.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
     positional arguments (city names and dates — in order):
